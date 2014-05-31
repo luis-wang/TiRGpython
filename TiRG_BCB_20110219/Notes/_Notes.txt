@@ -1,0 +1,68 @@
+
+Changes ("improvements", I hope) were made only in trg.hpp, namely:
+I put back into trg.hpp print_b() function and rewrote a part of build_b().
+(See this rewritten piece below)
+Now it does not bite off the very ends of detected textareas (that happened from now and then).
+Uncomment 3 print_b()'s and test it against some small pics for to see what *building*_b() is doing.
+And of course the stuff is under *** Public Domain License ***. Happy coding!
+
+
+
+    //print_b("C:/b1.txt");
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    for (int i = 0; i < h; ++i) {
+        if (b[i][w + 2] == 0) continue;
+        int j = 0;
+        int ss = 0;
+        while (j < w) {
+            if (b[i][j] && b[i][j + 1] && b[i][j + 2]) {
+                int js = j;
+                int sm = 0;
+                int gap = 0;
+                while (j < w && gap < 30) {
+                    if (b[i][j]) {
+                        gap = 0;
+                        ++sm;
+                    }
+                    else
+                        ++gap;
+                    ++j;
+                }
+                if (sm > 20 && sm > (j - js - gap) * 0.4) {
+                    ss += j - js - gap;
+                    for (int k = js; k < j - gap; ++k)
+                        b[i][k] += 2;
+                }
+                ++j;
+            }
+            else ++j;
+        }
+        if (ss < 40) b[i].assign(w + 3, 0);
+        else b[i][w + 2] = 1;
+    }
+    //print_b("C:/b2.txt");
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@    
+    int cnt = 0;
+    for (int i = 0; i < h + 1; ++i) {
+        if (b[i][w + 2] == 0) {
+            if (cnt > 0 && cnt < 8) {
+                for (int ii = i - cnt; ii < i; ++ii) {
+                    b[ii].assign(w + 3, 0);
+                }
+            }
+            cnt = 0;
+        }
+        else ++cnt;
+    }
+    //print_b("C:/b3.txt");
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+}
+
+
+
+
+
+
+
+
+
