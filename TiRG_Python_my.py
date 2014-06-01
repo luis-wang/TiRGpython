@@ -25,7 +25,9 @@ def text_detector(file_name):
     h_min = 6
     h_max = 44
     ns_min = 2
-    #
+    
+    print '初始值：dw,dh',dw,dh
+    
     d8 = ((1,1),(1,0),(1,-1),(0,-1),(-1,-1),(-1,0),(-1,1),(0,1))
     
     w, h = io.size
@@ -54,7 +56,7 @@ def text_detector(file_name):
     c = c / h / w
     c = int(0.5 + c)
     print 'sr =', sr
-    print 'c =', c
+    print 'c =', c, 'c_min = ',c_min
     c = max(c, c_min)
 
     def show_res_image(r):
@@ -95,7 +97,9 @@ def text_detector(file_name):
                 else:
                     nei[i][j] = y
 
+    
     def stroke_calc(p1, q1):
+        "计算笔划"
         p2 = min(h - 1, p1 + dh)
         q2 = min(w - 1, q1 + dw)
         nm = (p2 - p1) * (q2 - q1)
@@ -121,21 +125,35 @@ def text_detector(file_name):
             x[9] = 0
         return x[9]
 
+
     def get_text_regions():
+        "找出文字区域"
         ww = w / dw
         hh = h / dh
+        print 'w, h, dw, dh: ',w,h,dw,dh
+        print 'ww = %s, hh = %s ' % (ww,hh)
+        
+        #构造出一个list，元素个数为h+1个，每个元素包含w+3个零
         b = [[0] * (w + 3) for i in range(h + 1)]
-        for dy in (0, dh / 2):
+        #print '-wen-: b = ',b
+        
+        #循环12次
+        for dy in (0, dh / 2): 
             m = [[0] * (ww + 3) for i in range(hh + 1)]
+            
             for i in range(1 + dy, h, dh):
                 for j in range(1, w, dw):
                     m[(i - 1 - dy) / dh][(j - 1) / dw] = stroke_calc(i, j)
+                    
+                    
             for i in range(hh + 1):
                 for j in range(ww):
                     if m[i][j] != 0 and m[i][j + 1] != 0 and m[i][j + 2] != 0 and \
-                       m[i][j] + m[i][j + 1] + m[i][j + 2] > 3 * 800:
+                        m[i][j] + m[i][j + 1] + m[i][j + 2] > 3 * 800:
                         m[i][ww + 2] = 1
                         break
+                    
+                    
             for i in range(hh + 1):
                 if m[i][ww + 2] == 0:
                     continue
@@ -229,7 +247,7 @@ def text_detector(file_name):
 
 
 if __name__ == '__main__':
-    fn = 'img/chi1.png'
+    fn = 'img/ee.jpg'
     ret = text_detector(fn)    
     
     
