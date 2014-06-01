@@ -1,8 +1,21 @@
 #coding:utf8
 
+"""
+官方网址：http://tirg.sourceforge.net/
+样例图片参考：http://funkybee.narod.ru/
 
+目前来看，可以通过以下方式优化：
+1.识别时，有时边缘会切到字体，得到实际位置时，再向外延伸点可以更加精确
+2.因为大致位置还是非常精确的，所以可以再在这个位置上面搜索相同的颜色的字体等信息
+3.第二步需要会swt的计算
+
+"""
+
+import time
+import cv2
 import Tkinter
 from PIL import Image, ImageTk
+
 
 def text_detector(file_name):
     #1.打开图片
@@ -16,10 +29,16 @@ def text_detector(file_name):
         print '图片不存在 或不能读取文件!'
         return -1
     
+    image = cv2.imread(file_name)
+    cv2.imshow('image', image)
+    
+    
     #2.设置经验值
     # Needful magic numbers; mostly empiric ones:
-    dw = 24
-    dh = 24
+    dw = 24 #default=24
+    dh = 24 #default=24
+    
+    
     c_min = 35
     pl_min = 0.5
     h_min = 6
@@ -40,26 +59,51 @@ def text_detector(file_name):
         
         
     io2 = io.copy()
+    #将保存原图的所有对应像素值
     lum = [[0] * w for i in range(h)]
     nei = [[0] * w for i in range(h)]
-    sm = 0
+    
+    sm = 0  #sm是图片中所有像素值[0-255]的和
+    
     for i in range(h):
         for j in range(w):
             lum[i][j] = im.getpixel((j, i))
+
             sm += lum[i][j]
-            io2.putpixel((j, i), (111,111,111))
-    sr = sm * 1.0 / h / w
+            io2.putpixel((j, i), (111,111,111)) #将io2置为灰色的
+       
+            
+            
+            
+    print 'sm = ',sm
+    #io2.show()
+    #time.sleep(10)
+    
+    
+    #sr是所有 像素值的平均值
+    sr = float(sm) / (h*w)
+    
+    
+    #保存所有值与平均值的差值的绝对值的和
     c = 0
     for i in range(h):
         for j in range(w):
             c += abs(sr - lum[i][j])
-    c = c / h / w
+            
+    #每个值与平均值相差的平均值
+    c = c/(h*w)
     c = int(0.5 + c)
+    
+    
     print 'sr =', sr
     print 'c =', c, 'c_min = ',c_min
-    c = max(c, c_min)
+    c = max(c, c_min)  
+    
+    print 'c的最终值：',c
+
 
     def show_res_image(r):
+        "显示最终的结果图片"
         for ri in r:
             for p in range(ri[0], ri[1] + 1):
                 for q in range(ri[2], ri[3] + 1):
@@ -80,7 +124,9 @@ def text_detector(file_name):
         root.mainloop()
 
     def get_nei():
+        #依次循环每一行，除掉第一行和最后一行
         for i in range(1, h - 1):
+            #循环第一行的第一个像素，除去第一个和最后一个像素
             for j in range(1, w - 1):
                 y = 0
                 t = set([])
@@ -96,6 +142,7 @@ def text_detector(file_name):
                         nei[i][j] = -y
                 else:
                     nei[i][j] = y
+        
 
     
     def stroke_calc(p1, q1):
@@ -236,18 +283,23 @@ def text_detector(file_name):
         return r
 
     get_nei()
+    
     ans = get_text_regions()
+    
     if len(ans) == 0:
         print 'No text detected...\n'
         return 0
     print len(ans), 'text(-like) region(s) detected!\n'
+    print '找到的区域 ans = ', ans
     show_res_image(ans)
     return 1
 
 
 
 if __name__ == '__main__':
-    fn = 'img/ee.jpg'
+    f = ['img/small_chi.png',
+         'img/222t.jpg','img/eng1.png', 'img/u.jpg']
+    fn = f[-1]
     ret = text_detector(fn)    
     
     
